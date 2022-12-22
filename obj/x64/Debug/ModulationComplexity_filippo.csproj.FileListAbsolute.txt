@@ -1,0 +1,2 @@
+E:\ModulationComplexity_filippo\Projects\ModulationComplexity_filippo\obj\x64\Debug\ModulationComplexity_filippo.csproj.AssemblyReference.cache
+E:\ModulationComplexity_filippo\Projects\ModulationComplexity_filippo\obj\x64\Debug\ModulationComplexity_filippo.csproj.CoreCompileInputs.cache

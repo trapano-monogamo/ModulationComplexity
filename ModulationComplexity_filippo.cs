@@ -196,7 +196,7 @@ namespace VMS.TPS
             var _tmp = "";
             foreach (var e in l)
             {
-                _tmp += string.Format("{0},{1},{2},{3}", e[0], e[1], e[2], e[3]);
+                _tmp += string.Format("{0},{1},{2},{3},{4},{5},{6}", e[0], e[1], e[2], e[3], e[4], e[5], e[6]);
             }
             return _tmp;
         }
@@ -244,7 +244,7 @@ namespace VMS.TPS
 
                     double AAj = getArea(cp);
                     total_area += AAj;
-                    total_square_area = AAj * AAj;
+                    total_square_area += AAj * AAj;
                     BA += (normalizedMUj * AAj);
 
                     double perimeter = this.getPerimeter(cp, beam.MLC);
@@ -258,7 +258,7 @@ namespace VMS.TPS
                 }
 
                 double avgArea = total_area / cpModule.Count();
-                double stdArea = Math.Sqrt(total_square_area / cpModule.Count() - avgArea * avgArea);
+                double stdArea = Math.Sqrt((total_square_area / cpModule.Count()) - (avgArea * avgArea));
                 double areaunion = this.getAreaUnion(beam);
                 BM = 1 - (BA / areaunion);
 
@@ -287,7 +287,7 @@ namespace VMS.TPS
             }
 
             Directory.CreateDirectory(this.outputpath);
-            File.WriteAllText(this.outputpath + string.Format("{0} - {1}.csv", context.Patient.Name, plan.Id), msg);
+            File.WriteAllText(this.outputpath + string.Format("{0} - {1}.csv", context.Patient.Name, plan.Id), results_string);
 
             // MessageBox.Show(msg);
             MessageBox.Show(string.Format("CSV saved in {0}", this.outputpath + string.Format("{0} - {1}.csv", context.Patient.Name, plan.Id)));

@@ -226,41 +226,52 @@ namespace VMS.TPS
                 double BA = 0.0;
                 double BM;
                 double ALPO_sum = 0.0;
+                double avgALPO = 0.0;
+                double stdALPO = 0.0;
                 results.Add(beam.Id, new List<double[]> { });
 
-                double normalizedMUj = 0.0;
+                double normalizedMUj;
                 double prev_normalizedMUj = 0.0;
                 List<double> mtws = new List<double>();
+                double total_area = 0.0;
+                double total_square_area = 0.0;
+                double total_square_alpo = 0.0;
 
                 foreach (var cp in cpModule) {
                     mtws.Add(cp.MetersetWeight);
                     normalizedMUj = cp.MetersetWeight - prev_normalizedMUj; // MUj / MU
                     prev_normalizedMUj = cp.MetersetWeight;
+
                     double AAj = getArea(cp);
+                    total_area += AAj;
+                    total_square_area = AAj * AAj;
+                    BA += (normalizedMUj * AAj);
 
                     double perimeter = this.getPerimeter(cp, beam.MLC);
-
                     BI += (normalizedMUj * (
                         Math.Pow(perimeter, 2.0) / (4.0 * Math.PI * this.getArea(cp))
                     ));
-                    BA += (normalizedMUj * this.getArea(cp));
-                    ALPO_sum += this.getAlpo(cp, beam.MLC);
-                    
-                    // if (i % 50 == 0) {
-                    //     MessageBox.Show(string.Format("[{0},{1}] - perim: {2}", beam.Id, cp.Index, perimeter));
-                    // }
-                    // i += 1;
+
+                    double ALPO = this.getAlpo(cp, beam.MLC);
+                    ALPO_sum += ALPO;
+                    total_square_alpo += ALPO * ALPO;
                 }
+
+                double avgArea = total_area / cpModule.Count();
+                double stdArea = Math.Sqrt(total_square_area / cpModule.Count() - avgArea * avgArea);
                 double areaunion = this.getAreaUnion(beam);
                 BM = 1 - (BA / areaunion);
 
+                avgALPO = ALPO_sum / beam.ControlPoints.Count();
+                stdALPO = Math.Sqrt(total_square_alpo / cpModule.Count() - avgALPO * avgALPO);
+
                 // MessageBox.Show(string.Format("area union: {0}, mtws: {1}", areaunion, String.Join(", ", mtws.ToArray())));
 
-                results[beam.Id].Add(new double[4] { ALPO_sum / beam.ControlPoints.Count, BI, BA, BM });
+                results[beam.Id].Add(new double[7] { avgArea, stdArea, avgALPO, stdALPO, BI, BA, BM });
 
             }
-            var msg = string.Format(
-                "Patient, {0}, {1}\nPlan, {2}, {3}\n\nField,ALPO,BI,BA,BM\n",
+            var results_string = string.Format(
+                "Patient, {0}, {1}\nPlan, {2}, {3}\n\nField,avgArea,stdArea,ALPO,stdALPO,BI,BA,BM\n",
                 context.Patient.Id,
                 context.Patient.Name,
                 plan.Id,
@@ -268,17 +279,18 @@ namespace VMS.TPS
             );
             foreach (var entry in results)
             {
-                msg += string.Format(
+                results_string += string.Format(
                     "{0},{1}\n",
                     entry.Key,
                     stringifyList(entry.Value)
                 );
             }
 
-            MessageBox.Show(msg);
-
             Directory.CreateDirectory(this.outputpath);
             File.WriteAllText(this.outputpath + string.Format("{0} - {1}.csv", context.Patient.Name, plan.Id), msg);
+
+            // MessageBox.Show(msg);
+            MessageBox.Show(string.Format("CSV saved in {0}", this.outputpath + string.Format("{0} - {1}.csv", context.Patient.Name, plan.Id)));
         }
     }
 }
